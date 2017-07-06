@@ -3,7 +3,10 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import Process
 import RemoteData exposing (..)
+import Task
+import Time
 
 
 type alias Model =
@@ -52,7 +55,10 @@ update msg model =
                     let
                         cmd =
                             if model.running then
-                                Cmd.map Response (RemoteData.sendRequest request)
+                                Process.sleep (1 * Time.second)
+                                    |> Task.andThen (\_ -> request |> Http.toTask)
+                                    |> RemoteData.fromTask
+                                    |> Task.perform (Response)
                             else
                                 Cmd.none
                     in
